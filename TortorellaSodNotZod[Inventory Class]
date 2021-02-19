@@ -1,0 +1,272 @@
+//AUTHOR: JESSE TORTORELLA
+//COURSE: CPT187
+//PURPOSE: The purpose of the Inventory is to hold the items for purchase. The inventory also contains the details of each item including price, item name, ID number, and quantity of items. Upon purchase by a customer, the Inventory will decrease the amount of items on-hand (or items left in stock) and store the details of that purchase.
+//DATE: February 17, 2021
+
+package edu.cpt187.tortorella.exercise6; //Package Name
+
+import java.util.Random; //Imports the random object from the API library for use within the Inventory Class and subsequent Objects.
+
+import java.util.Scanner; //Imports the Scanner object from the API library, this will be used to read data from the files we are importing i.e. what kind of data type / unseen formatting / etc..
+
+import java.io.FileInputStream; //Imports the File Stream Object from the API library, this will be used to import the data to the initialized arrays (i.e. item names / prices / in stock counts.
+
+import java.io.IOException; //Imports the IOException Object from the API library, this will be used to disregard the error of not having the correct file name and allow me to code the error rather than have the program crash.
+
+public class Inventory //Creates the Inventory Class, the class is public so that the method can be accessed by the MainClass and/or other classes for use.
+{
+	//All variables are Encapsulated and variables can only be used by calling / use in class behaivors (located below), therefore for use in the main class the program must call the class behaivor to use the variable(s) rather than calling the variable outright. 
+	//Start of attributes: a.k.a. Initializing and declaration of Constants/Finals. These variables will not change over the course of the program.
+	private final String DISCOUNT_NAMES[] = {"Member", "Senior", "No Discount"}; //Initializes and declares the DISCOUNT_NAMES array, this array contains the names for the available discounts for customers.
+	private final double DISCOUNT_RATES[] = {0.15, 0.25, 0.0}; //Initializes and declares the DISCOUNT_RATES array, this array contains the discount rates corresponding to the discount names located above.
+	private final String PRIZE_NAMES[] = {"Candy Apple", "Baby Teeth", "Gladiator Sweat"}; //Initializes and declares the PRIZE_NAMES array, this array array containt the prizes that a customer can win following purchases.
+	private final int MAX_RECORDS = 35; //Used to limit the maximum amount of records that the number of records can be loaded from a file. 
+	private final int NOT_FOUND = -1; //Used to differentiate in the MainClass if a value was found at the user's given value. If the itemSearchIndex = -1, the MainClass will display that the value is found, if the value is found the itemSearchIndex will return the value. See setSearchIndex() below.
+	private final int ONE = 1; //Used for the bubbleSort method, it will be used to incriment the localLast and localFirst depending on the targetID and searched value within the array.
+	private final int RESET_VALUE = 0; //Used to reset integer values to their default values.
+	//Initializing and declaration of variables other than Constants/Finals. These variables will change over the course of the program, therefore they are declared to their default value.
+	private int[] itemIDs = new int[MAX_RECORDS]; //Used to hold the values of the ItemIDs imported from files. Will be used by having the user search against these values.
+	private String[] itemNames = new String[MAX_RECORDS]; //Intializes the itemNames array, used to hold the values imported from the file. The names will be delivered as the item name if the search value entered by the user is correct.
+	private double[] itemPrices = new double[MAX_RECORDS]; //Initializes the itemPrices array, used to hold the values imported from files. The prices will be delivered to the MainClass and related processes below if the user enters a correct value within the MainClass.
+	private int[] orderQuantities = new int[MAX_RECORDS]; //Used to hold the values of item's purchased. Will be used in reports within the MainClass.
+	private double[] orderTotals = new double[MAX_RECORDS]; //Used to hold the values of the costs of the items purchased by the user(s). Will be used in reports within the MainClass.
+	private int[] inStockCounts = new int[MAX_RECORDS]; //Initializes the inStockCounts array, used to hold the amount of items available for purchase within the store. If the user enters the correct value within the search index and quantity, this will be cross referenced to see if there is enough in stock.
+	private int itemSearchIndex = 0; //As entered in the MainClass, this will hold the correct value for the ItemId or be returned -1 which is used for decision structure within the mainClass (see displayNotFound()).
+	private int recordCount = 0; //Used to be incremented with the file import, this will be the LCV for setLoadItems within the Inventory Class.
+	private Random prizeGenerator = new Random(); //Creates a new random object from the imported class and stores it into "prize generator" variable. This will be used to get a random number that will correspond to a prize using the getRandomNumber method and setPrizeName method. 
+	//End of Initializing / Declaration of Variables.
+	public Inventory() //Default constructor of the Inventory Class. The constructor must be declared after all of the attributes, but before their default values. The constructor initializes the new object for use within other Classes, in our case the MainClass. The constructor does not give a return type and have the same name as the class.
+	{
+	} //End of class constructor
+	//Class behaivors are seperated into two types of methods: 1) Setter - to assign a value to an attribute. 2) Getters - returns a value(s) to the MainClass / Objects / Classes.
+	//Encapsulation requires that variables are only modifiable by class behaivors, therefore you will see that while attributes are private the methods must be public for use within other Classes and or Objects.	
+	public void setReduceStock(int borrowedHowMany) //Reduces the amount of stock in store based on the itemSearchIndex() method below and howMany.
+	{
+		//Sets howMany reduced of each item based on the imported amount from the order class.
+		inStockCounts[itemSearchIndex] = inStockCounts[itemSearchIndex] - borrowedHowMany; //Selects the respective index within the in stock counts array and subtracts the quantity of the item purchased from the amount in stock.
+	} //End of setReduceStock behaivor.
+	public void setLoadItems(String borrowedFileName) //Creates the FileHandling method for importing data from files, the parameter is set by the user within the MainClass.
+	{
+		try //Attempts to open the file with the given file name from the user. If there is an error, the catch will allow me to code around it.
+		{
+			//Remember if no errors exist the catch will never be executed.
+			Scanner infile = new Scanner (new FileInputStream(borrowedFileName)); //The program will attempt to input the data (as read by the scanner) to arrays undeclared.						
+			//Creates an instance of the Scanner Class called infile. With the passed parameters it will attempt to open the file based on the user's given name. I create also an instance of the File Input Stream to input the data.
+			recordCount = RESET_VALUE; //Used to reset the value to 0 of the record count to allow reset of the values within those arrays.
+			while (infile.hasNext() == true && recordCount < MAX_RECORDS) //If the file has values that have yet to be imported and the amount of values imported do not exceed the max amount of record imports. The loop will continue.
+			{
+				//Declares the array based on recordCount. This will start the array on index 0 and continue until there is no data left to import or the maximum amount of imported records has been reached.
+				itemIDs[recordCount] = infile.nextInt(); //Finds the nextInteger within the file's data and declares it to the record count's integer value within the array.
+				itemNames[recordCount] = infile.next();//Finds the nextInteger within the file's data and declares it to the record count's integer value within the array.
+				itemPrices[recordCount] = infile.nextDouble();//Finds the nextInteger within the file's data and declares it to the record count's integer value within the array.
+				inStockCounts[recordCount] = infile.nextInt();//Finds the nextInteger within the file's data and declares it to the record count's integer value within the array.
+				recordCount++; //LCV used to control the while loop, if the record count reaches MAX_RECORDS value the loop will stop.
+			} // End of while infile.hasNext() == true && recordCount < MAX_RECORDS
+			infile.close(); //Closes the initiated scanner for within the file. This saves RAM space.
+			//Bubble Sort must be invoked after the file is closed, at the end of try.
+			setBubbleSort(); //Calls the bubble sort method to sort the records imported.
+		} //End of try.
+		catch (IOException ex) //If the user gave an incorrect file name, usually the program would crash, this allows me to code around that. 
+		{
+			recordCount = NOT_FOUND; //Sets the recordCount to -1, this will be used in the decision structure within the MainClass and will tell the program the file was not successfully imported.
+		} //End of catch
+	} //End of setLoadItems method.
+	public void setLoadItems(String borrowedFileName, int borrowedSize) //Creates the FileHandling method for importing data from files, the parameter is set by the user within the MainClass.
+	{
+		try //Attempts to open the file with the given file name from the user. If there is an error, the catch will allow me to code around it.
+		{
+			//Remember if no errors exist the catch will never be executed.
+			Scanner infile = new Scanner (new FileInputStream(borrowedFileName)); //The program will attempt to input the data (as read by the scanner) to arrays undeclared.						
+			//Creates an instance of the Scanner Class called infile. With the passed parameters it will attempt to open the file based on the user's given name. I create also an instance of the File Input Stream to input the data.
+			recordCount = RESET_VALUE; //Used to reset the value to 0 of the record count to allow reset of the values within those arrays.
+			while (infile.hasNext() == true && recordCount < MAX_RECORDS && recordCount < borrowedSize) //If the file has values that have yet to be imported and the amount of values imported do not exceed the max amount of record imports. The loop will continue.
+			{
+				//Declares the array based on recordCount. This will start the array on index 0 and continue until there is no data left to import or the maximum amount of imported records has been reached.
+				itemIDs[recordCount] = infile.nextInt(); //Finds the nextInteger within the file's data and declares it to the record count's integer value within the array.
+				itemNames[recordCount] = infile.next();//Finds the nextInteger within the file's data and declares it to the record count's integer value within the array.
+				itemPrices[recordCount] = infile.nextDouble();//Finds the nextInteger within the file's data and declares it to the record count's integer value within the array.
+				orderQuantities[recordCount] = infile.nextInt();//Finds the nextInteger within the file's data and declares it to the  count's integer value within the array.
+				orderTotals[recordCount] = infile.nextDouble(); //Finds the next double within the file's data and declares it to the order total array at the appropriate index within the array.
+				recordCount++; //LCV used to control the while loop, if the record count reaches MAX_RECORDS value the loop will stop.
+			} // End of while infile.hasNext() == true && recordCount < MAX_RECORDS
+			infile.close(); //Closes the initiated scanner for within the file. This saves RAM space.
+			//Bubble Sort must be invoked after the file is closed, at the end of try.
+			setBubbleSort(); //Calls the bubble sort method to sort the records imported.
+		} //End of try.
+		catch (IOException ex) //If the user gave an incorrect file name, usually the program would crash, this allows me to code around that. 
+		{
+			recordCount = NOT_FOUND; //Sets the recordCount to -1, this will be used in the decision structure within the MainClass and will tell the program the file was not successfully imported.
+		} //End of catch
+	} //End of setLoadItems method.
+	public void setSearchIndex(int borrowedID) //Uses the borrowedTargetID from the user's input from the MainClass to set the item selected by the user within the getSearchResults method below. 
+	{
+		itemSearchIndex = getSearchResults(borrowedID); //Uses the getSearchResults method with the input from the MainClass to find the item and validate their selection.
+	} //End of setSearchIndex
+	public void setBubbleSort() //Because we are using the binary search logic, the arrays must be placed in alphabetical / numerical order to be used.
+	{
+		int localIndex = 0; //Initializes and declares the localIndex. This will be used to cycle between array indexes.
+		boolean localSwap = false; //Initializes and declares the localSwap, if true the bubblesort will call the setSwapArray method to correct the wrong placement of the value.
+		int localLast = recordCount - ONE; //Finds the last index within the array. As you know indexs begin at 0, so size -1 finds the correct index value.
+		while (localLast > 0) //localLast will be decremented as the loop continues so when the localLast = 0, the loop is finished.
+		{
+			localIndex = RESET_VALUE; //Initializes and declares the localIndex. This will be used to cycle between array indexes.
+			localSwap = false; //Initializes and declares the localSwap, if true the bubblesort will call the setSwapArray method to correct the wrong placement of the value.
+			while (localIndex < localLast) //While the localIndex has not reached the last value, or if not all values have been checked.
+			{
+				if (itemIDs[localIndex] > itemIDs[localIndex + ONE]) //If the value of itemID at the searched index is greater than the next place that means it is out of sort and must be changed (see setSwapArrayElements(localIndex)).
+				{
+					setSwapArrayElements(localIndex); //Calls the setSwapArrayElements and passes the localIndex to be used within the swapping of items (see setSwapArrayElements method).
+					localSwap = true; //If this is set to true then, the search will continue to check the value at localIndex and compare it to localIndex + one, see localSwap == false.
+				} //End of if itemIDs[localIndex] > itemIDs[localIndex + ONE].
+				localIndex++; //Increments the localIndex, this will continue the search to the next value within the index.
+			} //End of while ocalIndex < localLast.
+			//At this point the localIndex is equal to the localLast meaning that the values have cycled between all values within the array.
+			if (localSwap == false) //If a value was not swapped using the setSwapArrayElements(localIndex).
+			{
+				localLast = RESET_VALUE; //If no Swap occured there is no reason to double check the values as the order is correct.
+			} //End of if localSwap == false.
+			else //If a swap of values did occur using the setSwapArrayElements method.
+			{
+				localLast--;  //This will help end the larger loop of if localLast > ZERO. If all values are switched (if needed) then the loop will stop that way as well.
+			} //End of else localSwap == false.
+		} //End of while localLast > RESET_VALUE.
+	} //End of setBubble Sort Method
+	public void setSwapArrayElements(int borrowedIndex) //Passes the borrowedIndex to the method to allow the placement of the value that needs to be swapped as set by the bubbleSort method.
+	{
+		//Assignment of local variables these will be used to hold the values place
+		int localItemID = 0; //Local variable to allow swapping of values between the indexes of a given array to the the index + one.
+		String localItemName = ""; //Local variable to allow swapping of values between the indexes of a given array to the the index + one.
+		double localItemPrice = 0.0; //Local variable to allow swapping of values between the indexes of a given array to the the index + one.
+		int localOrderQuantities = 0; //Local variable to allow swapping of values between the indexes of a given array to the the index + one.
+		double localOrderTotals = 0.0; //local variable to hold the place of the index and then index + one.
+		int localInStockCounts = 0; //Local variable to allow swapping of values between the indexes of a given array to the the index + one.
+		//As a result of all arrays being parrallel we can swap all arrays by changing the value at index with the value at index +1, as the item ID is the only value that is compared to one another.
+		localItemID = itemIDs[borrowedIndex]; //Declares the localVariable to the value at localIndex.
+		itemIDs[borrowedIndex] = itemIDs[borrowedIndex + ONE]; //Declares the localVariable at index to the localVariable + one.
+		itemIDs[borrowedIndex + ONE] = localItemID; //Declares the localVariable + one to the value held at localVariable.
+		//End of swap for Item ID.
+		localItemName = itemNames[borrowedIndex]; //Declares the localVariable to the value at localIndex.
+		itemNames[borrowedIndex] = itemNames[borrowedIndex + ONE]; //Declares the localVariable at index to the localVariable + one.
+		itemNames[borrowedIndex + ONE] = localItemName; //Declares the localVariable + one to the value held at localVariable.
+		//End of swap for Item Name.
+		localItemPrice = itemPrices[borrowedIndex]; //Declares the localVariable to the value at localIndex.
+		itemPrices[borrowedIndex] = itemPrices[borrowedIndex + ONE]; //Declares the localVariable at index to the localVariable + one.
+		itemPrices[borrowedIndex + ONE] = localItemPrice; //Declares the localVariable + one to the value held at localVariable.
+		//End of swap for Item Price.
+		localOrderQuantities = orderQuantities[borrowedIndex]; //Declares the localVariable to the value at localIndex.
+		orderQuantities[borrowedIndex] = orderQuantities[borrowedIndex + ONE]; //Declares the localVariable at index to the localVariable + one.
+		orderQuantities[borrowedIndex + ONE] = localOrderQuantities; //Declares the localVariable + one to the value held at localVariable.
+		//End of swap for Order Quantities.
+		localOrderTotals = orderTotals[borrowedIndex]; //Declares the localVariable to the value at localIndex.
+		orderTotals[borrowedIndex] = orderTotals[borrowedIndex + ONE]; //Declares the localVariable at index to the localVariable + one.
+		orderTotals[borrowedIndex + ONE] = localOrderTotals; //Declares the localVariable + one to the value held at localVariable.
+		//End of swap for orderTotals
+		localInStockCounts = inStockCounts[borrowedIndex]; //Declares the localVariable to the value at localIndex.
+		inStockCounts[borrowedIndex] = inStockCounts[borrowedIndex + ONE]; //Declares the localVariable at index to the localVariable + one.
+		inStockCounts[borrowedIndex + ONE] = localInStockCounts; //Declares the localVariable + one to the value held at localVariable.
+		//End of swap for InStock Counts
+	} //End of setSwapArrayElements.
+	public int[] getInStockCounts() //Returns the inStockCounts array to the MainClass for decisions structure processes to assess if the item is still available.
+	{
+		return inStockCounts; //Returns the int array instockCounts to the Main Class to check if the item is still available as well as the quantity of the item.
+	} //End of getInStockCounts behaivor.
+	public int[] getItemIDs() //Return the itemIDs array to the calling method.
+	{
+		return itemIDs; //Returns the array of itemIDs to the calling method within the MainClass.
+		//This array will be declared based on the File import's values.
+	} //End of getItemNames behaivor.
+	public String[] getItemNames() //Return the itemNames array to the calling method.
+	{
+		return itemNames; //Returns the array of Item Names to the calling method within the MainClass.
+		//This array will be declared based on the File import's values.
+	} //End of getItemNames behaivor.
+	public double[] getItemPrices() //Returns the itemPrice array to the calling method.
+	{
+		return itemPrices; //Returns the array of Item Prices to the calling method within the MainClass.
+	} //End of getItemPrices behaivor.
+	public String[] getDiscountNames() //Returns the discountNames array to the calling method.
+	{
+		return DISCOUNT_NAMES; //Returns the array of DiscountNames to the calling method within the MainClass.
+	} //End of getDiscountNames behaivor.
+	public double[] getDiscountRates() //Returns the array of Disocunt rates to the calling method within the MainClass and Order class.
+	{
+		return DISCOUNT_RATES; //Returns the array of DiscountRates to the calling method within the MainClass.
+	} //End of getDiscountRates behaivor.
+	public int[] getOrderQuantities() //Returns the amount of items purchased to the MainClass in the MainClass.
+	{
+		return orderQuantities; //Returns orderQuantities array to the calling method. Will be show in the final report.
+	} //End of getOrderQuantities method.
+	public double[] getOrderTotals() //Returns the array created with the overloaded setLoadItems method, this contains the amount of items purchased.
+	{
+		return orderTotals; //Returns orderTotals array to the calling method. Will be show in the final report.
+	} //End of getOrderTotals method.
+	public String[] getPrizeNames() //Returns the names of the prizes that could be won at the store as set by the PRIZE_NAMES array.
+	{
+		return PRIZE_NAMES; //Returns PRIZE_NAME array to the calling method. Will be show in the final report.
+	} //End of getPrizeNames method.
+	public int getRandomNumber() //Returns the random as set by the code block below to the setPrizeName. Uses the random object to set a local index within the setPrizeName method above.
+	{
+		return prizeGenerator.nextInt(PRIZE_NAMES.length); //Returns the first integer generated by the prizeGenerator to the MainClass. Seed is set to PRIZE_NAMES.length making sure it cannot exceed the prizes available.
+	} //End of getRandomNumber method
+	public int getMaxRecords() //Returns the variable to mainclass or other objects, this will not be used within other processes.
+	{
+		return MAX_RECORDS; //Returns the value of Max_records. This value is unneeded.
+	} //End of getMaxRecords method.
+	public int getItemSearchIndex() //Used to return the itemSearchIndex to the OrderClass for related processes in the purchase.
+	{
+		return itemSearchIndex; //Returns the itemSearchIndex to the calling method see setLastItemSelectedIndex() within the order class.
+	} //End of getItemSearchIndex.
+	public int getRecordCount() //Returns the recordCount to the MainClass. This will help to see if the file was successfully imported.
+	{
+		return recordCount; //returns the record count to the MainClass. This will be used to see if the file's values were successfully imported.
+	} //End of getRecordCount method.
+	public double getGrandTotal() //Returns the grand total made by the store.
+	{	
+		//Declaration / Initialization of local accumulator variable.
+		double localGrandTotal = 0; //Declares the localGrandTotal variable to hold the accumulation of all items purchased.
+		int localIndex = 0; //Creates the localIndex to cycle between orderTotals array.
+		while (localIndex < orderTotals.length) //While localIndex has not cycled between all of the values within the orderTotals' index.
+		{
+			localGrandTotal += orderTotals[localIndex]; //Accumulates money spent at each index and assigns it to the local variable, localGrandTotal.
+			localIndex++; //LCV, used to control the loop localIndex < orderTotals.length.
+		} //End of while localIndex < orderTotals.length.
+		return localGrandTotal; //Returns the localGrandTotalVar
+	} //End of getGrandTotal method.
+	public int getSearchResults(int borrowedBorrowedTargetID) //Passes the borrowedBorrowedTargetID from the MainClass to this method to locate the value requested..
+	{
+		//As a result of no value being hardcoded, we must declare the following variables as the top of the method.
+		final int TWO = 2; //Used to find the midpoint for binary search (middle = largest + smallest / 2)
+		//Initializing and declaration of variables for use within method.
+		int localFirst = 0; //Used to initialize the localFirst array which is the first index within a given array, it is set to 0.
+		int localMid = 0; //Used to initialize the middle of the array, depending on the array size.
+		int localLast = recordCount - ONE; //Used to initialize the last index of a given array by getting the recordCount (as set by setArray method above).
+		boolean localFound = false; //Local found will be used to declare if the given value was found.
+		while (localFirst <= localLast && localFound == false) //While the value of localFirst is not incrimented or localLast is not decrimented enough to have them equal or localFirst lower and localFound (or if the value) is set to NOT_FOUND. 
+		{
+			//localLast and localFound and localFound all act as LCVs.
+			localMid = (localFirst + localLast) / TWO; //Takes the localFirst and localLast and divides it by two, this will find the correct int value for the Midpoint variable (as it will be middle).
+			if (itemIDs[localMid] == borrowedBorrowedTargetID) //If the value is found at the midpoint, then the binary search is over.
+			{
+				localFound = true; //Returns that the localFound is true.
+			} //End of if itemIDs[localMid] == borrowedBorrowedTargetID.
+			else //If the TargetID is not found at the localMid.
+			{
+				//LocalMid is the value returned depending on the value searched for in comparison, localMid will be incremented or decremented. That is why you must set the values in order.
+				if (itemIDs[localMid] < borrowedBorrowedTargetID) //If the value at midpoint is less than the targetID, the midPoint will be icrimented.
+				{
+					localFirst = localMid + ONE; //Adds one to the localMid to check the index above the localMid.
+				} //End of if itemIDs[localMid] < borrowedBorrowedTargetID.
+				else //If the value located at localMid is greater than borrowedTargetId, localMid will be decremented and search the next cycle.
+				{
+					localLast = localMid - ONE;  //Subtracts one to localMid, this will be used to search the value below it on the next cycle of values.
+				} //End of else itemIDs[localMid] < borrowedBorrowedTargetID.
+			} //End of else itemIDs == borrowedTargetID.
+		} //End of while localFirst <= localLast && localFound == false.
+		if (localFound == false) //If the value is not found within the array the value of localMid will be returned as NOT_FOUND, this will be used for decision structure within the MainClass and will alert the user of the error.
+		{
+			localMid = NOT_FOUND; //NOT_FOUND = -1, this will be used in decision structure within the MainClass and will alert the user the value entered could not be found.
+		} //End of if localFound == false.
+		return localMid; //Returns localMid to the calling method within the MainClass.
+	} //End of getSearchResults method.
+} //End of Inventory Class.
+
