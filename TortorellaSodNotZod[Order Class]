@@ -1,0 +1,126 @@
+//AUTHOR: JESSE TORTORELLA
+//COURSE: CPT187
+//PURPOSE: The purpose of the Order is to calculate the total cost of purchase based on the item selection(s) by the customer(s) and how many of the item(s) selected by the customer.
+//DATE: February 17, 2021
+
+package edu.cpt187.tortorella.exercise6; //Package Name
+
+public class Order //Creates the order class.
+{
+	//All variables are Encapsulated and variables can only be used by calling / use in class behaivors (located below), therefore for use in the main class the program must call the class behaivor to use the variable(s) rather than calling the variable outright. 
+	//Start of attributes: a.k.a. Initializing and declaration of Constants/Finals. These variables will not change over the course of the program.
+	private final double TAX_RATE = 0.075; //Tax rate used to calibrate purchases.
+	//Attributes of the class, all iterations of this object will have these designated variables.
+	private int discountType = 0; //Creates the variable discountType, this will be used to set the discountName / discountPrice for use within the class. The variable will be provided by the user's input in the MainClass. Because characters can be used as numerical symbols we set the itemSelection to an int for the decision structure processes within the setDiscountType method.
+	private int itemID = 0; //Creates a variable to hold the item selected via user's input within the MainClass.
+	private String itemName = ""; //Creates the itemName variable this will hold the name of the item selected by the customer using the user's input in the MainClass and class behaivors located in this class, as well as the corresponding array above.
+	private double itemPrice = 0.0; //Creates the itemPrice variable this will hold the price of the item selected by the customer using the user's input in the MainClass and class behaivors located in this class, as well as the corresponding array above.
+	private String discountName = ""; //Creates the discountName variable this will hold the name of the discount selected by the customer using the user's input in the MainClass and class behaivors located in this class, as well as the corresponding array above.
+	private double discountRate = 0.0; //Creates the discountRate variable this will hold the rate of the discount selected by the customer using the user's input in the MainClass and class behaivors located in this class, as well as the corresponding array above.
+	private int howMany = 0; //This variable will hold how many of the item the customer has bought, this will contain the number of the item bought, given by the user in the MainClass.
+	private int lastItemSelectedIndex = 0; //Used to keep track of the item selected, left blank as it requires output from main class.
+	private String prizeName = ""; //Stores the prize's name into this variable.
+	//End of Initializing / Declaration of Variables.
+	public Order() //Default constructor of the Order Class. The constructor must be declared after all of the attributes, but before their default values. The constructor initializes the new object for use within other Classes, in our case the MainClass. The constructor does not give a return type and have the same name as the class.
+	{
+	} //End of constructor.
+	//Class behaivors are seperated into two types of methods: 1) Setter - to assign a value to an attribute. 2) Getters - returns a value(s) to the MainClass / Objects / Classes.
+	//Encapsulation requires that variables are only modifiable by class behaivors, therefore you will see that while attributes are private the methods must be public for use within other Classes and or Objects.
+	public void setLastItemSelectedIndex(int borrowedSearchIndex) //Passes through the menu selection from the main class. It will set character selection to the selected character so all the processes that correspond to this selection can be processed.
+	{
+		lastItemSelectedIndex = borrowedSearchIndex; //Assigns the passed borrowedSearchIndex from the Inventory class to this class. This will be used to set the price / name / stock counts from the arrays contained in the Inventory Class.
+	} //End of setLastItemSelectedIndex method.
+	public void setItemID(int[] borrowedItemIDs) //Passes through the item ID (if found) from user's input from the main class. It will set the ItemID variable to the borrowedId from the Inventory class.
+	{
+		itemID = borrowedItemIDs[lastItemSelectedIndex]; //Assigns itemID to the borrowedItemIDs.
+	} //End of setItemID method.
+	public void setItemName(String[] borrowedItemNames) //Sets the item's name based on the setItemSelection above (as provided by the user's input in the main class.)
+	{
+		itemName = borrowedItemNames[lastItemSelectedIndex]; //Because lastItemSelectedIndex  is already set to it's proper value, the variable can find it's proper place within the index within the borrowedItemNames array. As passed by the inventory object.
+	} //End of setItemName
+	public void setItemPrice(double[] borrowedItemPrices) //Sets the item's price based on the setItemSelection above (as provided by the user's input within the main class.)
+	{
+		itemPrice = borrowedItemPrices[lastItemSelectedIndex]; //As a result of itemSelection being an integer the itemSelection variable can be used to find the correct selection within the index of ITEM_PRICES array as passed by the inventory object.
+	} //End of setItemPrice method.
+	public void setHowMany(String borrowedHowMany) //Uses the borrowedHowMany from the MainClass and sets it to the howMany in the Order Class. This is to be used in calculations located below.
+	{
+		howMany = Integer.parseInt(borrowedHowMany); //As of a result of borrowedHowMany being a string within the MainClass and howMany being an int, it requires conversion from String to int. To do so, we use the Integer.parseInt which calls the class Integer and uses the parseInt to change it to a numerical value. 
+	} //End of setHowMany method.
+	public void setDiscountType(char borrowedMenuSelection) //Borrows the menuSelection character to set the discount selection. This is a setter and will designate the discount name / rate based on it.
+	{
+		discountType = borrowedMenuSelection - 'A'; //Strings are numerical variables, 'A' = 1, therefore if I subtract 1 from the character it will make it 0 corresponding to the index within the discount name / discount rate arrays. Therefore, it will be the first item in the array or in this case, the selection of 'A' corresponding to it's numerical value. So and so forth with the other characters as well.
+	} //End of setDiscountType method.
+	public void setDiscountName(String[] borrowedDiscountNames) //Uses the discountType as set by the setDiscountType method to set the name of the discount.
+	{
+		discountName = borrowedDiscountNames[discountType]; //As a result of discountType being an integer the discountType variable can be used to find the correct selection within the index of DISCOUNT_NAMES array.
+	} //End of setDiscountName method.
+	public void setDiscountRate(double[] borrowedDiscountRate) //Sets the discounts rate based on the setDiscountType method above (as given by user input in the mainClass).
+	{
+		discountRate = borrowedDiscountRate[discountType]; //As a result of discountType being an integer the discountType variable can be used to find the correct selection within the index of DISCOUNT_RATES array.
+	} //End of setDiscountRate method.
+	public void setPrizeName(String[] borrowedPrizeNames, int borrowedPrizeIndex) //Setters set the attributes of the object. Passes the parameter(s) listed for processes.
+	{
+		prizeName = borrowedPrizeNames[borrowedPrizeIndex]; //Sets the prizeName to the localIndex's .
+	} //End of setPrizeName method.
+	public void setDecreaseInStock(Inventory borrowedInventoryObject) //Imports the method within the inventory class to keep track of stock in the main class by passing through the values located in this class.
+	{
+		//To do the calculation the setReduceStock is passed two parameters, lastItemSelected index and howMany, this is to properly keep track of the stock, therefore we must pass it below, similar to how we pass calculations from the order class to the MainClass.
+		borrowedInventoryObject.setReduceStock(howMany); //passes howMany and last item index to decrease the amount of the selected item.
+	} //End of setDecreaseInStock method.
+	public int getInStockCount(int[] borrowedInStockCounts) //Imports the borrowed Instock counts from the inventory class to pass how many of a selection is in stock.
+	{
+		return borrowedInStockCounts[lastItemSelectedIndex]; //Returns the value
+	} //End of getInStockCount method.
+	public int getItemID() //Returns the itemID as determined above to the MainClass for use within reports.
+	{
+		return itemID; //Simple return statement, returns the item's name by simply announcing return and then the variable. The Main Class will call on these methods by invoking statements.
+	} //End of itemID behaivor.
+	public String getItemName() //Returns the item name as determined above to the MainClass for use within reports.
+	{
+		return itemName; //Simple return statement, returns the item's name by simply announcing return and then the variable. The Main Class will call on these methods by invoking statements.
+	} //End of getItemName behaivor.
+	public double getItemPrice() //Returns the item's price as determined above to the MainClass for use within reports.
+	{
+		return itemPrice; //Simple return statement, returns the item's name by simply announcing return and then the variable. The Main Class will call on these methods by invoking statements.
+	} //End of getItemPrice behaivor.
+	public int getHowMany() //Returns the item's quantity as determined above to the MainClass for use within reports.
+	{
+		return howMany; //Simple return statement, returns the item's name by simply announcing return and then the variable. The Main Class will call on these methods by invoking statements.
+	} //End of getHowMany behaivor.
+	public String getDiscountName() //Returns the customer's discount as determined above to the MainClass for use within reports.
+	{
+		return discountName; //Simple return statement, returns the item's name by simply announcing return and then the variable. The Main Class will call on these methods by invoking statements.
+	} //End of getDiscountName behaivor.
+	public double getDiscountRate() //Returns the customer's discount rate as determined above to the MainClass for use within reports.
+	{
+		return discountRate; //Simple return statement, returns the item's name by simply announcing return and then the variable. The Main Class will call on these methods by invoking statements.
+	} //End of getDiscountRate behaivor.
+	public double getDiscountAmount() //Returns the discountAmount or how much the customer is saving. This is by multiply the method getDiscountRate * getItemPrice methods. The returned values from the methods below will be used to calculate the discountAmount. 
+	{
+		return discountRate * itemPrice; //Multiplies the result of getDiscountRate and getItemPrice to determine the discountAmount.
+	} //End of getDiscountAmount behaivor.
+	public double getDiscountPrice() //Returns the discountPrice or how much is saved per item as a result of the discountPrice.
+	{
+		return itemPrice - getDiscountAmount(); //Returns the result of the discountAmount subtrated by the itemPrice, this will show how much the customer pays per item with the discount.
+	} //End of getDiscountPrice behaivor.
+	public String getPrizeName() //returns the prize name one.
+	{
+		return prizeName; //Returns named variable to the MainClass
+	} //End of getPrizeName method.
+	public double getSubTotal() //Returns the subtotal of the price, or the total prior to tax. This is done by multiplying how many the customer is buying by the discountPrice.
+	{
+		return howMany * getDiscountPrice(); //Returns the result of getHowMany multiplied by the discountPrice to show how much the customer is paying prior to tax.
+	} //End of getSubTotal behaivor.
+	public double getTaxRate() //Returns the given taxRate for any purchase at the store. This is to show to the customer in the invoking method how much the tax is in percentage form.
+	{
+		return TAX_RATE; //Returns the taxRate to the calling method in the mainClass. It will be displayed in the report and be used for calculations below.
+	} //End of getTaxRate behaivor.
+	public double getTaxAmt() //Returns the amount of tax the customer will have to pay, this is done by multiplying the subTotal by the taxRate.
+	{
+		return getSubTotal() * TAX_RATE; //By multiplying the results of the getSubTotal by the getTaxRate method it will give us the amount of money needed for tax.
+	} //End of getTaxAmount behaivor.
+	public double getTotalCost() //Gets the total cost of purchase by adding the result of getSubTotal and the getTaxAmount methods. This will show th amount of money needed for the purchase.
+	{
+		return getSubTotal() + getTaxAmt(); //By adding the result of getSubTotal and getTaxAmount behaivors, it will return to the calling method the total cost needed for purchase.
+	} //End of getTotalCost behaivor.
+} //End of Order Class.
