@@ -1,0 +1,401 @@
+//AUTHOR: JESSE TORTORELLA
+//COURSE: CPT187
+//PURPOSE: The purpose of the MainClass is to find out what item the customer wishes to purchase and how much of the item they wish to purchase. At the end of the transaction, the user is given a reciept showing what item the customer bought and the cost of that item. Upon exiting, a report will be shown of the items' ID, name, quantity and price, and the grand total of all items purchased at the store.
+//DATE: February 17, 2021
+
+package edu.cpt187.tortorella.exercise6; //Package Name
+
+import java.util.Scanner; //Creates an Instance of the Scanner Class for within the program.
+
+public class MainClass //Creates main class.
+{
+	//Declaration / Initialization of variables for use within the program. Public means that these variables can be accessed throughout the entire program as well as other objects. The static means it can be called within our methods, so you will only need to write it once.
+	//These variables are constants and will not change over the course of this program.
+	public static final char MENU_CHARS[] = {'A', 'B', 'Q'}; //MENU_CHARS creates an array of chars containing 'A', 'B' and 'Q'. These will be menu options for the Main Menu.
+	public static final String MENU_OPTIONS[] = {"Login", "Create an Account", "Quit"}; //MENU_OPTIONS creates an array of String values containing "Login", "Create an Account", "Quit", we create the array so we will only have to write it once and can call it based on when we need it.
+	public static final char FILE_MENU_CHARS[] = {'A', 'B', 'R'}; //FILE_MENU_CHARS creates an array of chars containing 'A' 'B' and 'R'. These will be menu options for the File Menu. We create an array so we will only have to write it once and call it based on our needs.
+	public static final String FILE_MENU_OPTIONS[] = {"Load Inventory", "Create Order", "Return to Main Menu"}; //FILE_MENU_OPTIONS creates an array of String values containing "Load Inventory", "Create Order", "Return to Main Menu", we create the array so we will only have to write it once and can call it based on when we need it.
+	public static final char SUB_MENU_CHARS[] = {'A', 'B', 'C', 'D'}; //SUB_MENU_CHARS creates an array of chars containing 'A' 'B' 'C' and 'D'. These will be menu options for the SubMenu(s). We create an array so we will only have to write it once and call it based on our needs.
+	public static final String ACCOUNTS_FILE_NAME = "MasterInventoryFile.dat"; //Creates a String variable ACCOUNTS_FILE_NAME, this will be used to pass to the UserAccount object to name the file that will hold the values of the user's names and passwords.
+	public static final String INVENTORY_FILE_NAME = "MasterOrderFile.dat"; //Creates a String variable INVENTORY_FILE_NAME and assigns "MasterOrderFile" to it, this will be used to pass to the WriteOrderClass and name the file that the data will be written to.
+	//End of declaration / initialization of Class Scope Variables.
+	public static void main(String[] args) //Creation of the MainMethod, this will host the menu(s), and the local variables etc.
+	{
+		Scanner input = new Scanner(System.in); //Creates an instance of the Scanner called input, this will be used to read the user's input throughout our program.
+		//Initializing of local variables for use within our program. We only require two. They are only capable of reaching through the main method.
+		String userName = ""; //Creates a variable for the user to enter their userName via getUserName method. The variable is set to the default value.
+		char menuSelection = ' '; //Creates a variable for the user to enter their menuSelection via validateMainMenu.
+		//End of initialization of local variables.
+		Inventory currentInventory = new Inventory();  //Creates an instance of the inventory Order for use within the main class.The object will have the same behaivors / variables as designated by the Order Class.
+		Order currentOrder = new Order(); //Creates an instance of the Order object for use within our program. The object will have the same behaivors / variables as designated by the Order Class.
+		WriteOrder orders = new WriteOrder(INVENTORY_FILE_NAME); //Creates an instance of the the WriteOrder class and passes the file's name that will be used to create the write order.
+		UserAccounts currentUser = new UserAccounts(ACCOUNTS_FILE_NAME); //Creates an instance of the UserAccounts class and passes the file's name that will be used to hold and write to the users' information, specifically usernames and passwords to login.
+		displayWelcomeBanner(); //Displays the Welcome Banner a method created below to greet the user and tell the user the purpose of the program.
+		menuSelection = validateMenuSelection(input); //Uses the validate MainMenu method to declare the menuSelection to the input provided by the user.
+		while (menuSelection != 'Q') //If the user has not chosen to quit, the program will continue down this path.
+		{
+			currentUser.setUserAccountArrays(); //Sets the arrays of usernames and passwords from file, if not values exists it will be empty. The program will save the usernames and passwords for future use by writing the record.
+			userName = getUserName(input); //Passes the input to the getUserName method. This will be passed to the UserAccounts object to see if the value exists or not.
+			if (menuSelection != 'A') //If the user did not choose to login or quit (see while menuSelection != 'Q'). With this selection, it will create an account if the username does not exist.
+			{
+				currentUser.setSearchedIndex(userName); //Passes the username from the getUserName method and passes it to the UserAccounts class to see if the value is already used.
+				if(currentUser.getSearchedIndex() >= 0) //setSearchedIndex above sets the value of getSearchedIndex(), if the value is greater than NOT_FOUND or -1, that means the username is found.
+				{
+					displayAccountResults(userName); //Displays to the user that the userName already exists 
+				} //End of if currentUser.getSearchedIndex() >= 0.
+				else //If the username is found, that means that the userName / password can be created.
+				{
+					currentUser.setWriteRecord(userName, getPassword(input)); //Passes the username to the UserAccounts object to create a record. The password will be created / passed by the getPassword method.
+					displayAccountResults(); //Displays an alert to the user that the user's account has been created
+				} //End of else currentUser.getSearchedIndex() >= 0.
+			} //End of if menuSelection != 'A'.
+			else //If the user has selected to login to the program with an account already created.
+			{
+				//Overloaded method below, the first setSearchedIndex does not involve passing the password, that is because the password has yet to be created and cannot be used to administer successful login.
+				currentUser.setSearchedIndex(userName, getPassword(input)); //Will pass the userName and the password entered by the user via the getPassword method.
+				if(currentUser.getSearchedIndex() < 0) //If the user's input does not find the login information within the UserAccounts records the program will show an error.
+				{
+					displayLoginError(); //Alerts the user that the login information is incorrect.
+				}  //End of if currentUser.getSearchedIndex() <= 0
+				else //If the user's input matches the userName(s) or password(s) that the user entered they can continue to the program.
+				{
+					menuSelection = validateFileSelection(input); //Displays and prompts the user for their selection. Will offer the user to return to main menu, create an order, or load the inventory.
+					//Remember the menu does not allow any characters besides the ones within MENU_CHARS.
+					while (menuSelection != 'R') //While the user has not selected to return to the MainMenu the follwoing code will run.
+					{
+						if (menuSelection == 'A') //If the user selects char 'A' on the validateFileSelection method, the following code will run.
+						{
+							currentInventory.setLoadItems(getFileName(input)); //Uses the getFileName method below to pass the file's name to the Inventory object to begin loading the values into the arrays.
+							if (currentInventory.getRecordCount() <= 0)	 //If the file was not found (see setLoadItem in Inventory Class) the setLoadItems would return a -1 or NOT_FOUND. This will also happen if the file is empty.	
+							{
+								displayFileError(); //Alerts the user that the file was not opened / empty.
+							} //End of if currentInventory.getRecordCount() <= 0.
+							else //If the file was successfully report the user will be given a report on how much data was imported.
+							{
+								displayRecordReport(currentInventory.getRecordCount()); //Alerts the user of how many items were imported by passing the record count incremented in the setLoadItems to the displayRecordReport method below.
+							} //End of else currentInventory.getRecordCount() <= 0
+						} //End of if menuSelection = 'A'
+						else //If the user selected 'B' or "Create Order" in the validateMainMenu method.
+						{
+							currentInventory.setSearchIndex(validateSearchValue(input)); //Uses the validateSearchValue method with the granted input to set the search index within the inventory class.
+							if (currentInventory.getItemSearchIndex() < 0) //The value entered in the validateSearchValue searches using the getSearchResult method. If the value is not found it is returned as -1. Therefore using this will determine if the search was successful.
+							{
+								displayNotFound(); //Alerts the user that the value searched for was not found.
+							} //End of currentInventory.getItemSearchIndex() < 0.
+							else //If the value was successfully found, the line of code will be followed below.
+							{
+								currentOrder.setLastItemSelectedIndex(currentInventory.getItemSearchIndex()); //After validating that the item exists within the inventory the Order will use that value to set the price / quantity / etc / discount / etc.
+								currentOrder.setItemID(currentInventory.getItemIDs()); //Passes the itemIDs from the inventory class and sets the Item ID searched for from the validateSearchValue, this will set related processes within the order class.
+								currentOrder.setItemPrice(currentInventory.getItemPrices()); //Passes the items' prices to the order class to set the item's price using the lastItemSelected Index.
+								currentOrder.setItemName(currentInventory.getItemNames()); //Passes the items' names to the order class to set the item's name using the lastItemSelected Index.
+								currentOrder.setHowMany(validateHowMany(input)); //Passes the quantity of the item purchased to the order class.
+								if (currentOrder.getInStockCount(currentInventory.getInStockCounts()) < currentOrder.getHowMany())//If the amount of the item that the user is trying to purchase is more than what the store has in stock, it is considered out of stock.
+								{
+									displayOutOfStock(); //Alerts the user that the item is currently out of stock.
+								} //End of if currentOrder.getInStockCount(currentInventory.getInStockCounts()) < currentOrder.getHowMany().
+								else //If the item has enough stock to cover the amount that the user is buying, it will continue below.
+								{
+									currentOrder.setDiscountType(validateDiscountMenu(input, currentInventory.getDiscountNames(), currentInventory.getDiscountRates())); //Passes the discount names and rates to the validateDiscountMenu method, the result will be saved in the discount type variable in the order class.
+									currentOrder.setDiscountName(currentInventory.getDiscountNames()); //Passes the discount names to the order class. This will use the discount type and find the proper value located within the index of the array.
+									currentOrder.setDiscountRate(currentInventory.getDiscountRates()); //Uses the discountType variable to find the correct value within the array by using the discount type as the respective index location.
+									currentOrder.setDecreaseInStock(currentInventory); //Passes the decrease in stock of a certain item to the current inventory object name to decriment the stock counts accordingly.
+									currentOrder.setPrizeName(currentInventory.getPrizeNames(), currentInventory.getRandomNumber()); //Sets the prize name by passing the random number and prize names to the order, using the random number as an index (seeded to the prize name length), this will find the correct prize won.
+									//Overloaded methods - Both displayOrderReports have the same method name but contain different parameter therefore the compilier looks at the methods as two different methods. Methods have the same function with 1 difference, related to new parameter.					.
+									orders.setWriteOneOrder(currentOrder.getItemID(), currentOrder.getItemName(), currentOrder.getItemPrice(), currentOrder.getHowMany(), currentOrder.getTotalCost()); //Passes the following parameters to the WriteOrder Class, this will be used to make a data file of all the purchases
+									if (currentOrder.getDiscountRate() > 0) //If the amount of the item that the user is purchasing exceeds the amount in stock as dictated by the getInStock in the currentInventory continue down below.
+									{
+										displayOrderReport(userName, currentOrder.getItemName(), currentOrder.getItemPrice(), currentOrder.getHowMany(), currentOrder.getDiscountName(),	currentOrder.getDiscountRate(), currentOrder.getDiscountAmount(),currentOrder.getDiscountPrice(),  currentOrder.getSubTotal(), currentOrder.getTaxRate(), currentOrder.getTaxAmt(), currentOrder.getTotalCost(), currentOrder.getPrizeName(), currentOrder.getInStockCount(currentInventory.getInStockCounts())); //Passes the following parameters to show the user a summary of what they purchased.
+									} //End of if currentORder.getDiscountRate() > 0.0
+									else //If a discount was not used for the purchase.
+									{
+										displayOrderReport(userName, currentOrder.getItemName(), currentOrder.getItemPrice(), currentOrder.getHowMany(), currentOrder.getSubTotal(), currentOrder.getTaxRate(), currentOrder.getTaxAmt(), currentOrder.getTotalCost(), currentOrder.getPrizeName(), currentOrder.getInStockCount(currentInventory.getInStockCounts())); //Passes the parameters to be shown within the order report to summarize the user's purchase.
+									} //End of else currentORder.getDiscountRate() > 0.0.
+								} //End of else currentOrder.getInStockCount(currentInventory.getInStockCounts()) < currentOrder.getHowMany()).
+							} //End of else currentInventory.getItemSearchIndex() < 0.
+						} //End of else menuSelection == 'A'.
+						menuSelection = validateFileSelection(input); //Displays and prompts the user for their selection. Will offer the user to return to main menu, create an order, or load the inventory.
+					} //End of while menuSelection != 'R'.
+				} //End of else currentUser.getSearchedIndex() <= 0.
+			} //End of else menuSelection != 'A'.
+			menuSelection = validateMenuSelection(input); //Uses the validate MainMenu method to declare the menuSelection to the input provided by the user.
+		} //End of while menuSelection != 'Q'.
+		if (orders.getRecordCount() > 0.0) //If an item was purchased and recorded in the writeOrder object, as it increments with the use of the print function..
+		{
+			currentInventory.setLoadItems(orders.getFileName(), orders.getRecordCount()); //Replaces the values within the arrays with the values already purchased for display in the final report below.
+			displayFinalReport(currentInventory.getItemIDs(), currentInventory.getItemNames(), currentInventory.getItemPrices(), currentInventory.getOrderQuantities(), currentInventory.getOrderTotals(), currentInventory.getRecordCount(), currentInventory.getGrandTotal()); //Final report will show the items previously boughten at the store, based on the loaded items within the currentInventory.
+		} //End of if currentOrder.getTotalCost() > 0.0.
+		displayFarewellMessage(); //Displays farewell message, a method created below.
+		input.close(); //Closes scanner
+	} //End of main method.
+	//Void Methods - Values that do not return values to the MainClass or supporting classes for processess. Used for menu(s) and displays of information for the user.
+	public static void displayWelcomeBanner() //This method shows the user a welcome screen upon start of the program to greet and tell the customer the purpose of the program.
+	{
+		System.out.println("Welcome To The Junk Zone"); //Welcome
+		System.out.println("Use this to pick the item from our selection"); //Purpose
+		System.out.println("and calculate the total cost of the purchase."); //Purpose
+	} //End of displayWelcomeBanner method.
+	public static void displayMainMenu() //This method will show the user a menu to help the user request what item they want.
+	{ 
+		int localIndex = 0; //local accumulator variable.  Used to cycle through menu options.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+		System.out.printf("%-16s\n", "MAIN MENU"); //Menu Title
+		while (localIndex < MENU_OPTIONS.length) //While the menu still has options, this loop will run.
+		{
+			System.out.printf("%-2s%-4s%-13s\n", MENU_CHARS[localIndex], "for", MENU_OPTIONS[localIndex]); //Uses variable to show users the different products and prices of said products available.
+			localIndex++;  //To stop an endless loop and cycle through menu options and selections.  //To stop an endless loop and cycle through menu options and selections.
+		} //End of while localIndex < MENU_OPTIONS.length.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+		System.out.printf("%-60s\n","Enter your selection here: "); //Prompts user to enter the product they are purchasing.
+	} //End of displayMainMenu method.
+	public static void displayFileMenu() //This method will show the user the file menu to help the user request from the program what it wants.
+	{ 
+		int localIndex = 0; //local accumulator variable.  Used to cycle through menu options.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+		System.out.printf("%-16s\n", "FILE MENU"); //Menu Title
+		while (localIndex < FILE_MENU_OPTIONS.length) //While the menu still has options, this loop will run.
+		{
+			System.out.printf("%-2s%-4s%-13s\n", FILE_MENU_CHARS[localIndex], "for", FILE_MENU_OPTIONS[localIndex]); //Uses variable to show users the different options and characters to enter.
+			localIndex++;  //To stop an endless loop and cycle through menu options and selections.  //To stop an endless loop and cycle through menu options and selections.
+		} //End of while localIndex < MENU_OPTIONS.length.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+		System.out.printf("%-60s\n","Enter your selection here: "); //Prompts user to enter the product they are purchasing.
+	} //End of displayFileMenu method.
+	public static void displayAccountResults(String borrowedUserName) //Displays that the userName selected has already been used.
+	{
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+		System.out.printf("%-60s\n", "ACCOUNT RESULTS"); //Title
+		System.out.printf("%-32s%-5s%-17s\n", "Account not created: username, ", borrowedUserName, ", already exists"); //Alerts the user that the account was not created on account that the username was already in use.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+	} //End of displayAccountResults.
+	public static void displayAccountResults() //Used to display that the account has succesffully been created.
+	{
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+		System.out.printf("%-60s\n", "ACCOUNT RESULTS"); //Title
+		System.out.printf("%-60s\n", "New account created"); //Displays to the user that a new account was created with the user's inputted value.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+	} //End of displayAccountResults.
+	public static void displayLoginError() //Used to alert the user that the login information inputted was incorrect.
+	{
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+		System.out.printf("%-60s\n", "LOGIN ERROR"); //Title
+		System.out.printf("%-60s\n", "Username and/or Password is incorrect"); //Alerts the user that the username and / or password entered are incorrect.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+	} //End of displayLoginError method.
+	public static void displayFileError() //Used to alert the user that the name of the file that they entered in the getFileName() method was not found or could not be opened.
+	{
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+		System.out.printf("%-60s\n", "FILE ERROR");  //Title
+		System.out.printf("%-60s\n", "The file named was not found or could not be opened");  //Explanation to user that an error has occured and the program cannot continue.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+	} //End of displayNotOpen method
+	public static void displayNotFound() //Used to alert the user that the search value that the user used in validateSearchValue method was not found.
+	{
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+		System.out.printf("%-60s\n", "NOT FOUND ERROR");  //Title
+		System.out.printf("%-60s\n", "The search value entered was not found");  //Explanation to user of the nature of the error
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+	} //End of displayNotFound method.
+	public static void displayRecordReport(int borrowedRecordCount) //Alerts the user that the inventory has been reloaded.
+	{
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+		System.out.printf("%-60s\n", "RECORD REPORT");  //Title
+		System.out.printf("%-3d%-57s\n", borrowedRecordCount, "records processed");  //Alerts the user how many records have been processed from the file.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+	} //End of displayInventoryLoaded method.
+	public static void displayOutOfStock() //Alerts the user that the quantity that the user is trying to purchase exceeds the amount in stock..
+	{
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+		System.out.printf("%-60s\n", "OUT OF STOCK ERROR"); //From prompt.
+		System.out.printf("%-60s\n", "The quantity entered is greater than the quantity in-stock"); //Error Message.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //From Prompt
+	} //End of displayOutOfStock method.
+	public static void displayDiscountMenu(String[] borrowedDiscountNames, double[] borrowedDiscountRates) //This method will show the user the discounts available to them.
+	{
+		int localIndex = 0; //Local accumulater variable. Used to cycle between discountRates below.
+		System.out.printf("%-60s\n", "Refer to our menu to continue."); //Explanation
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt
+		System.out.printf("%-16s\n", "DISCOUNT MENU:"); //Menu Title
+		while (localIndex < borrowedDiscountNames.length) //While the accumulator is less than the amount of options, it will run.
+		{
+			System.out.printf("%-2s%-4s%-12s%5.1f%-2s\n", SUB_MENU_CHARS[localIndex], "for", borrowedDiscountNames[localIndex], borrowedDiscountRates[localIndex] * 100, "%"); //Uses variable to show users the different discount classes and rates available.
+			localIndex++;  //To stop an endless loop and cycle through menu options and selections. LCV.
+		} //End of while localIndex < borrowedDiscountNames.length.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt
+		System.out.printf("%-60s\n","Please make your selection here: "); //Prompts user to enter the Class of customer that they are.
+	} //End of displayDiscountMenuMethod
+	public static void displayOrderReport (String userName, String borrowedItemName, double borrowedItemPrice, int borrowedHowMany, String borrowedDiscountName, double borrowedDiscountRate, double borrowedDiscountAmount, double borrowedDiscountPrice, double borrowedSubTotal, double borrowedTaxRate, double borrowedTaxAmount, double borrowedTotalCost, String borrowedPrizeName, int borrowedInStockCount) //Displays the user a reciept for their purchase. The parameters are taken from the order class as shown in the invokation statement.
+	{
+		// Formatting I made four columns for 1) The title of value, 2) Whether the value was of monetary value, (3) the value, and (4) whether the value was a percentage.
+		// I set the column widths to the maximum value possible and added 1 for padding. I aligned them according to the formatting provided in the prompt.
+		System.out.printf("%-60s\n", "~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~"); //Formating from prompt.
+		System.out.printf("%-8s\n", "ORDER REPORT"); //Formatting from prompt.
+		System.out.printf("%-60s\n", "~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~"); //Formating from prompt.
+		System.out.printf("%-18s%-16s\n", "Customer Name", userName); //Gives the customer's name
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-18s%-16s\n", "Item Name", borrowedItemName); //Gives the item's name
+		System.out.printf("%-18s%-2s%6.2f%2s\n", "Item Price:", "$", borrowedItemPrice, ""); //Gives the price of the item.
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-18s%-16s\n", "Discount Name:", borrowedDiscountName); //Gives the discount rate used by the customer.
+		System.out.printf("%-18s%-2s%5.1f%2s\n", "Discount Rate:", "", borrowedDiscountRate * 100, "%"); //Gives the discount rate as dictated by the menu above.
+		System.out.printf("%-18s%-2s%6.2f%2s\n", "Discount Amount:", "$", borrowedDiscountAmount, ""); //Multiplies the original price by the discount rate to give the savings per one unit of the item.
+		System.out.printf("%-18s%-2s%6.2f%2s\n", "Discounted Price:", "$", borrowedDiscountPrice, ""); //Subtracts the discount from the original price to give the price of a single unit of the item with the discount.
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-18s%-2s%6d%2s\n", "Quantity:", "", borrowedHowMany, ""); //Gives the discount rate as dictated by the menu above.
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-18s%-2s%6.2f%2s\n", "Subtotal:", "$", borrowedSubTotal, ""); //Gives the total amount of money needed before borrowedTax.
+		System.out.printf("%-18s%-2s%5.1f%2s\n", "Tax Rate:", "", borrowedTaxRate * 100, "%"); //Gives the total amount of money needed before borrowedTax.
+		System.out.printf("%-18s%-2s%6.2f%2s\n", "Tax Amount:", "$", borrowedTaxAmount, ""); //Gives the total amount of money needed before borrowedTax.
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-18s%-2s%6.2f%2s\n", "Order total:", "$", borrowedTotalCost, ""); //Gives the total amount of money needed before borrowedTax.System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-18s%-12s\n", "Prize:", borrowedPrizeName); //Gives the total amount of money needed before Tax.
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-20s%-1d%-1s%4s%-7s\n", "Buy more now: Only ", borrowedInStockCount, " ", borrowedItemName, "s left"); //Alerts the user how much the recently purchased item are left in stock.
+		System.out.printf("%-60s\n", "~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~"); //Formating from prompt.
+	} //End of displayOrderReport
+	public static void displayOrderReport (String userName, String borrowedItemName, double borrowedItemPrice, int borrowedHowMany, double borrowedSubTotal, double borrowedTaxRate, double borrowedTaxAmount, double borrowedTotalCost, String borrowedPrizeName, int borrowedInStockCount) //Displays the user a reciept for their purchase. The parameters are taken from the order class as shown in the invokation statement.
+	{
+		// Formatting I made four columns for 1) The title of value, 2) Whether the value was of monetary value, (3) the value, and (4) whether the value was a percentage.
+		// I set the column widths to the maximum value possible and added 1 for padding. I aligned them according to the formatting provided in the prompt.
+		System.out.printf("%-60s\n", "~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~"); //Formating from prompt.
+		System.out.printf("%-8s\n", "ORDER REPORT"); //Formatting from prompt.
+		System.out.printf("%-60s\n", "~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~"); //Formating from prompt.
+		System.out.printf("%-18s%-16s\n", "Customer Name", userName); //Gives the customer's name
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-18s%-16s\n", "Item Name", borrowedItemName); //Gives the item's name
+		System.out.printf("%-18s%-2s%6.2f%2s\n", "Item Price:", "$", borrowedItemPrice, ""); //Gives the price of the item.
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-18s%-2s%6d%2s\n", "Quantity:", "", borrowedHowMany, ""); //Gives the discount rate as dictated by the menu above.
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-18s%-2s%6.2f%2s\n", "Subtotal:", "$", borrowedSubTotal, ""); //Gives the total amount of money needed before borrowedTax.
+		System.out.printf("%-18s%-2s%5.1f%2s\n", "Tax Rate:", "", borrowedTaxRate * 100, "%"); //Gives the total amount of money needed before borrowedTax.
+		System.out.printf("%-18s%-2s%6.2f%2s\n", "Tax Amount:", "$", borrowedTaxAmount, ""); //Gives the total amount of money needed before borrowedTax.
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-18s%-2s%6.2f%2s\n", "Order total:", "$", borrowedTotalCost, ""); //Gives the total amount of money needed before borrowedTax.System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-18s%-12s\n", "Prize:", borrowedPrizeName); //Gives the total amount of money needed before Tax.
+		System.out.printf("%-60s\n", ""); //Formating from prompt.
+		System.out.printf("%-20s%-1d%-1s%4s%-7s\n", "Buy more now: Only ", borrowedInStockCount, " ", borrowedItemName, "s left"); //Alerts the user how much the recently purchased item are left in stock.
+		System.out.printf("%-60s\n", "~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~"); //Formating from prompt.
+	} //End of displayOrderReport
+	public static void displayFinalReport(int[] borrowedIDs, String[] borrowedItemName, double[] borrowedItemPrice, int[] borrowedQuantity, double[] borrowedTotal, int borrowedRecordCount, double borrowedGrandTotal)
+	{
+		//Declaration of accumulator variables.
+		int localIndex = 0; //Used to cycle between prize names below for report in while loop with the help of the prize names' array.
+		System.out.printf("%-60s\n", "~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ "); //Formating from prompt.
+		System.out.printf("%-60s\n", "FINAL REPORT:"); //Menu Title.
+		System.out.printf("%-60s\n", "~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ "); //Formating from prompt.
+		System.out.printf("%-4s%-22s%-10s%-5s%-6s\n", "ID", "NAME", "PRICE", "QTY", "TOTAL"); //Header for items.
+		while(localIndex < borrowedRecordCount) //While the accumulator is less than the amount of options, it will run.
+		{
+			System.out.printf("%-4d%-22s%-3s%-7.2f%-5d%-2s%-7.2f\n", borrowedIDs[localIndex], borrowedItemName[localIndex], "$", borrowedItemPrice[localIndex], borrowedQuantity[localIndex], "$", borrowedTotal[localIndex]); //Grand tally, used to accumulate if the options was selected.
+			localIndex++;  //To stop an endless loop and cycle through menu options and selections. LCV.
+		} //End of while localDiscountNamesIndex < borrowedDiscountNames.length.
+		System.out.printf("%-60s\n", "GRAND TOTAL"); //Heading for data below
+		System.out.printf("%-2s%-7.2f\n", "$", borrowedGrandTotal); //Shows the amount of money spent at the store.
+		System.out.printf("%-60s\n", "~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ ~~~~ "); //Formating from prompt.
+	} //End of displayFinalReport method
+	public static void displayFarewellMessage() //This method shows the user a farewell statement thanking the user for use of the program and saying goodbye, it is a good indication that the program has ended.
+	{
+		System.out.printf("%-60s\n", "We hope you enjoyed our application!"); //Farewell
+		System.out.printf("%-60s\n", "Have a great day!"); //Farewell
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+	} //End of displayFarewellMessage method.
+	//Value Returning Methods - Methods that return values if called upon in the main method.
+	public static String getUserName(Scanner borrowedInput) //Method returns the userName to the variable within the main method.
+	{
+		String localUserName = ""; //User's name. Blank as it requires an borrowedInput from user. Local variable.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+		System.out.println("Enter your username:"); //Prompts user to enter user's name below.
+		localUserName = borrowedInput.next(); //Input via user.
+		return localUserName; //Returns the value of Username to the calling statement.
+	} //End of getUserName method
+	public static String getPassword(Scanner borrowedInput) //Allows the user to "login" the system, will be used to verify that the user name and password coincide with values in the UserAccounts (parallel) array of usernames and passwords.
+	{
+		String localPassword = ""; //Local variable for use within the method. Will hold the user's reponse to pass to the UserAccounts class.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+		System.out.printf("%-60s\n", "Enter your password:"); //Prompts the user for their response.	
+		localPassword = borrowedInput.next(); //Assigns the input from the user to the local variable to be returned to the UserAccounts class.
+		return localPassword; //Returns the value of localPassword to the calling statement.
+	} //End of getPassword method.
+	public static char validateMenuSelection(Scanner borrowedInput)
+	{
+		char menuSelection = ' '; //local variable to allow change. Set to default value.
+		displayMainMenu(); //calls a different method to show the menu.
+		menuSelection = borrowedInput.next().toUpperCase().charAt(0); //Takes the user's response and 1) capitalizes it and 2) limits the response to the first character.
+		while (menuSelection != 'A' && menuSelection != 'B' && menuSelection != 'Q')//If the user enters a selection then the ones decided it will display an error message and ask to re-enter a selection until the variable is changed to an applicable one.
+		{
+			System.out.printf("%-60s\n", "Sorry that was an incorrect selection"); //Error Message
+			System.out.printf("%-60s\n", "Let's try again!"); //Error Message
+			displayMainMenu(); //Calls the displayMainMenu to display the menu for the validation method.
+			menuSelection = borrowedInput.next().toUpperCase().charAt(0); //Takes the user's response and 1) capitalizes it and 2) limits the response to the first character.
+		} //End of while menuSelection != 'A' && menuSelection != 'Q'.
+		return menuSelection; //Returns the menuSelection to the calling statement.
+	} //End of validateMenuSelection method.
+	public static char validateFileSelection(Scanner borrowedInput)
+	{
+		char menuSelection = ' '; //local variable to allow change. Set to default value.
+		displayFileMenu(); //calls a different method to show the menu.
+		menuSelection = borrowedInput.next().toUpperCase().charAt(0); //Takes the user's response and 1) capitalizes it and 2) limits the response to the first character.
+		while (menuSelection != 'A' && menuSelection != 'B' && menuSelection != 'R')//If the user enters a selection then the ones decided it will display an error message and ask to re-enter a selection until the variable is changed to an applicable one.
+		{
+			System.out.printf("%-60s\n", "Sorry that was an incorrect selection"); //Error Message
+			System.out.printf("%-60s\n", "Let's try again!"); //Error Message
+			displayFileMenu(); //Calls the displayFileMenu to display the menu for the validation method.
+			menuSelection = borrowedInput.next().toUpperCase().charAt(0); //Takes the user's response and 1) capitalizes it and 2) limits the response to the first character.
+		} //End of while menuSelection != 'A' && menuSelection != 'Q'.
+		return menuSelection; //Returns the menuSelection to the calling statement.
+	} //End of validateFileSelection method.
+	public static String getFileName(Scanner borrowedInput) //Allows the user to pass the File's name that they wish to open to stock the store with the item's prices/names/quantities. This will be returned to the Inventory setLoadItems method.
+	{
+		String localFileName = ""; //Local variable for use within the method. Will hold the user's reponse to pass to the Inventory class.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+		System.out.printf("%-60s\n", "Enter the file name with extension (i.e. file.txt):"); //Prompts the user for their response.	
+		localFileName = borrowedInput.next(); //Assigns the input from the user to the local variable to be returned to the inventory class.
+		return localFileName; //Returns the value of fileName to the calling statement.
+	} //End of getFileName method
+	public static int validateSearchValue(Scanner borrowedInput) //Allows the user to search for an item's ID number. Using the setSearchIndex within the inventory class, if correctly entered the user will be given the price / name / quantities of the item via other behaivors.
+	{
+		int localSearchIndex = 0; //Local variable for use within the method. Will hold the user's reponse to pass to the Inventory class.
+		System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+		System.out.printf("%-60s\n", "Enter the search value:"); //Prompts the user for their response.	
+		localSearchIndex = borrowedInput.nextInt(); //Input via user is declared to the local variable.
+		while (localSearchIndex < 0) //validation method, because localSearchIndex cannot be negative, while the user enters a negative it will prompt the user again.
+		{
+			System.out.println("Sorry that is an incorrect value!"); //Error Message
+			System.out.println("Please try again."); //Error Message cont.
+			System.out.printf("%-60s\n", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); //Formating from prompt.	
+			System.out.printf("%-60s\n", "Enter the search value:"); //Prompts the user for their response.	
+			localSearchIndex = borrowedInput.nextInt(); //Input via user is declared to the local variable.
+		} //End of while howMany <= 0.
+		return localSearchIndex; //Returns the value of the search value to the calling statement.
+	} //End of validateSearchValue method
+	public static char validateDiscountMenu(Scanner borrowedInput, String[] borrowedDiscountNames, double [] borrowedDiscountRates) //Uses Scanner to take input from user via method, value returning method.
+	{
+		char localSelection = ' '; //Blank as it requires an input from user. Local variable.
+		displayDiscountMenu(borrowedDiscountNames, borrowedDiscountRates); //Calls the main menu method
+		localSelection = borrowedInput.next().toUpperCase().charAt(0); //Takes the user's response and 1) capitalizes it and 2) limits the response to the first character.
+		while (localSelection != 'A' && localSelection != 'B' && localSelection != 'C') //If the user enters a selection then the ones decided it will display an error message and ask to re-enter a selection until the variable is changed to an applicable one.
+		{
+			System.out.println("Sorry that is an incorrect selection!"); //Error Message
+			System.out.println("Please try again."); //Error Message cont.
+			displayDiscountMenu(borrowedDiscountNames, borrowedDiscountRates); //Calls the main menu method
+			localSelection = borrowedInput.next().toUpperCase().charAt(0); //Takes the user's response and 1) capitalizes it and 2) limits the response to the first character.
+		} //End of while localRateSelection != 'A' && localRateSelection != 'B' && localRateSelection != 'C'.
+		return localSelection; //Returns the char value of rateSelection.
+	} //End of validateDiscountMenu method.
+	public static String validateHowMany(Scanner input) //Uses Scanner to take input from user via method, value returning method.
+	{
+		String localHowMany = ""; //How many. Blank as it requires an input from user. Local variable. 
+		System.out.println("How many of the item are you buying?"); //Prompts user to enter the quantity of the item below.
+		localHowMany = input.next(); //Input via user.
+		while (Integer.parseInt(localHowMany) <= 0) //validation method, because localHowMany is now a String it requires a change to Integer to compare to 0.
+		{
+			System.out.println("Sorry that is an incorrect quantity!"); //Error Message
+			System.out.println("Please try again."); //Error Message cont.
+			System.out.println("How many of the item are you buying?"); //Prompts user to enter the quantity of the item below.
+			localHowMany = input.next(); //Input via user.
+		} //End of while howMany <= 0.
+		return localHowMany; //Returns the value of howMany.
+	} //End of validateHowMany method.
+} //End of MainClass
