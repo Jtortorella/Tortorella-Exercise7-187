@@ -1,0 +1,53 @@
+//AUTHOR: JESSE TORTORELLA
+//COURSE: CPT187
+//PURPOSE: The purpose of the WriteOrder is to create a record of the customer's / customers' purchase(s). This will be used to keep tally of the item bought by the customer. Records include the name of the item, price of the item, quantity purchased, item ID and grand tally of the purchases.
+//DATE: February 17, 2021
+
+package edu.cpt187.tortorella.exercise6; //Package Name.
+//The following classes will be used to write data files. 
+import java.io.PrintWriter; //Imports the printWriter Class to write data to a file. Used with formatting of the Item ID, price, etc..
+import java.io.FileWriter; //Imports the fileWriter Class from the API library, to write data to a file.
+import java.io.IOException; //Imports the IOException Class from the API library, this will be used to disregard the error of not having the correct file name and allow me to code the error rather than have the program crash.
+
+public class WriteOrder //Creates the WriteOrder Class. 
+{
+	//Initializing and declaration of variables other than Constants/Finals. These variables will change over the course of the program, therefore they are declared to their default value.
+	private boolean fileFoundFlag = false; //Boolean value, either true or false. Boolean's default value is false, but that will change over the course of the program.
+	private String masterFileName = ""; //Used to name the file created.
+	private int recordCount = 0; //Used to tally the amount of records counted on the final report.
+	//End of Initializing / Declaration of Variables.
+	WriteOrder(String borrowedFileName) //Non-default constructor used to assign new values to attributes on the instance of an object. In this case we were passing the name of the file that the file will be written to.
+	{
+		masterFileName = borrowedFileName; //Assigns the masterFileName to the borrowedFileName passed from the constructor in the MainClass.
+	} //End of class constructor.
+	public void setWriteOneOrder(int borrowedItemID, String borrowedItemName, double borrowedItemPrice, int borrowedQuantity, double borrowedOrderCost) //Passes the parameters listed to created a data sheet of the items purchased.
+	{
+		try //This program will attempt to open the file and write data to it.
+		{	
+			PrintWriter filePrintWriter = new PrintWriter(new FileWriter(masterFileName, true)); //Creates an instance of the printWriter Class passing the fileWriter and passing the file's name to it as well as allowing us to append the file.
+			filePrintWriter.printf("%n%d\t%s\t%.2f\t%d\t%.2f", borrowedItemID ,borrowedItemName ,borrowedItemPrice ,borrowedQuantity, borrowedOrderCost); //Prints the following parameters to the data sheet seperated by a tab.
+			fileFoundFlag = true; //If the file found is found the boolean value will be set to true.
+			filePrintWriter.close(); //Closes the filePrintWriter object.
+			recordCount++; //Increments the recordCount variable this will be returned as 'borrowed size' to the setLoadInventory overLoaded method.
+		} //End of try. 
+		catch (IOException ex) //Catches the potential error that the file is not named and let's the developer change the result of the error.
+		{
+			fileFoundFlag = false; //If the file is unable to be located the found file flag will be set to false.
+		
+		} //End of catch.
+	} //End of setWriteOrder method.
+	public boolean getFileFoundFlag() //Returns the fileFoundFlage to the calling method, this is set by the setWriteOrder method above.
+	{
+		return fileFoundFlag; //Returns the fileFoundFlage to the calling method.
+	} //Returns the fileFoundFlag to the calling method.
+	public String getFileName() //Returns the file name as set by the set file name method.
+	{
+		return masterFileName; //Returns the masterFileName to the calling method.
+	} //End of getFileName method.
+	public int getRecordCount() //Returns the record count.
+	{
+		return recordCount; //Returns record count. 
+	} //End of getRecordCount method.
+} //End of Write Order class.
+
+
