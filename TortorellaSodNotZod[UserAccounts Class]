@@ -1,0 +1,123 @@
+//AUTHOR: JESSE TORTORELLA
+//COURSE: CPT187
+//PURPOSE: The purpose of the UserAccounts is to hold the login information for the users. The UserAccounts allow the user to create an account and then log into the program. The UserAccounts class will keep track of those new accounts and store the information bfor future use.
+//DATE: February 17, 2021
+
+package edu.cpt187.tortorella.exercise6; //Package name.
+
+import java.io.PrintWriter; //Imports the printWriter Class to write data to a file. Used with formatting of the Item ID, price, etc..
+
+import java.util.Scanner; //Imports the Scanner object from the API library, this will be used to read data from the files we are importing i.e. what kind of data type / unseen formatting / etc..
+
+import java.io.FileInputStream; //Imports the File Stream Object from the API library, this will be used to import the data to the initialized arrays (i.e. item names / prices / in stock counts.
+
+import java.io.FileWriter; //Imports the fileWriter Class from the API library, to write data to a file.
+
+import java.io.IOException; //Imports the IOException Object from the API library, this will be used to disregard the error of not having the correct file name and allow me to code the error rather than have the program crash.
+
+public class UserAccounts //Creates the UserAccount class.
+{
+	//All variables are Encapsulated and variables can only be used by calling / use in class behaivors (located below), therefore for use in the main class the program must call the class behaivor to use the variable(s) rather than calling the variable outright. 
+	//Start of attributes: a.k.a. Initializing and declaration of Constants/Finals. These variables will not change over the course of the program.
+	private final int NOT_FOUND = -1; //Used to differentiate in the MainClass if a value was found at the user's given value. If the itemSearchIndex = -1, the MainClass will display that the value is not found, if the value is found the itemSearchIndex will return the value. See getSeqSearch() below.
+	private final int RESET_VALUE = 0; //Used to reset integer values to their default values, useful for processes within bubbleSort(), binarySearch() and setLoadArray() methods below.
+	private final int MAXIMUM_RECORDS = 50; //Used to limit the maximum amount of records that the number of records can be loaded from a file.  
+	//Initializing and declaration of variables other than Constants/Finals. These variables will change over the course of the program, therefore they are declared to their default value.
+	private String[] userNames = new String[MAXIMUM_RECORDS]; //Initializes the userNames array to the size of MAXIMUM_RECORDS. This array will hold the usernames created.
+	private String[] passwords = new String[MAXIMUM_RECORDS]; //Initializes the passwords array to the size of MAXIMUM_RECORDS. This array will hold the passwords created, corresponding to the username's index.
+	private String masterFileName = ""; //Used to name the file that the printWriter will write to, will be used to hold the usernames and passwords that the user(s) create.
+	private int recordCount = 0; //Used to correctly index items that are imported from the file, will also be used for size within the searches and sort methods.
+	private int searchedIndex = 0; //Used to pull the user's input from the MainClass, will be used to find values that correspond to the value.
+	//End of Initializing / Declaration of Variables.
+	UserAccounts(String borrowedFileName) //Non-default constructor used to assign new values to attributes on the instance of an object. In this case we were passing the name of the file that the file will be written to, assigning it to MasterFileName.
+	{
+		masterFileName = borrowedFileName; //Assigns the masterFileName to the borrowedFileName passed from the constructor within the MainClass.
+	} //End of constructor.
+	//Class behaivors are seperated into two types of methods: 1) Setter - to assign a value to an attribute. 2) Getters - returns a value(s) to the MainClass / Objects / Classes.
+	//Encapsulation requires that variables are only modifiable by class behaivors, therefore you will see that while attributes are private the methods must be public for use within other Classes and or Objects.	
+	public void setUserAccountArrays() //Creates the FileHandling method for importing data from files, the parameter is set by the user within the MainClass.
+	{
+		try //Attempts to open the file with the given file name from the user. If there is an error, the catch will allow me to code around it.
+		{
+			//Remember if no errors exist the catch will never be executed.
+			Scanner infile = new Scanner (new FileInputStream(masterFileName)); //The program will attempt to input the data (as read by the scanner) to arrays undeclared.						
+			//Creates an instance of the Scanner Class called infile. With the passed parameters it will attempt to open the file based on the user's given name. I create also an instance of the File Input Stream to input the data.
+			recordCount = RESET_VALUE; //Used to reset the value to 0 of the record count to allow reset of the values within those arrays.
+			while (infile.hasNext() == true && recordCount < MAXIMUM_RECORDS) //If the file has values that have yet to be imported and the amount of values imported do not exceed the max amount of record imports. The loop will continue.
+			{
+				//Declares the array based on recordCount. This will start the array on index 0 and continue until there is no data left to import or the maximum amount of imported records has been reached.
+				userNames[recordCount] = infile.next(); //Finds the next String within the file's data and declares it to the record count's integer value within the array.
+				passwords[recordCount] = infile.next();//Finds the next String within the file's data and declares it to the record count's integer value within the array.
+				recordCount++; //LCV used to control the while loop, if the record count reaches MAX_RECORDS value the loop will stop.
+			} // End of while infile.hasNext() == true && recordCount < MAX_RECORDS
+			infile.close(); //Closes the initiated scanner for within the file. This saves RAM space.
+		} //End of try.
+		catch (IOException ex) //If the user gave an incorrect file name, usually the program would crash, this allows me to code around that. 
+		{
+			recordCount = NOT_FOUND; //Sets the recordCount to -1, this will be used in the decision structure within the MainClass and will tell the program the file was not successfully imported.
+		} //End of catch
+	} //End of setLoadItems method.
+	public void setSearchedIndex(String borrowedUserName) //Uses the borrowedUserName from the user's input from the MainClass to find if the username was already created beforehand. 
+	{
+		searchedIndex = getSeqSearch(borrowedUserName); //Uses the getSeqSearch method with the input from the MainClass to find the username and see if that username was created.
+	} //End of setSearchedIndex method.
+	//Overloaded method, the method above will check if the username exists and below will verify the username's password and username. The program does not allow two users of the same name (see decision structure within MainClass).
+	public void setSearchedIndex(String borrowedUserName, String borrowedPassword) //Passes the username and password from the user to try and 'login' to the program, if no username / password combination is found the result will be -1, or NOT_FOUND.
+	{
+		searchedIndex = getSeqSearch(borrowedUserName); //Uses the getSeqSearch method with the input from the MainClass to find the username and see if that username was created.
+		if (searchedIndex >= RESET_VALUE && getPasswordMatch(borrowedPassword) == false) //Passes the borrowedPassword to the getPasswordMatch if the username is found (> RESET_VALUE).
+		{
+			searchedIndex = NOT_FOUND; //If the password is not found, that means the username / password combination is NOT_FOUND or -1, this will be used for decision structures within the MainClass and will stop the user from continuing into the program. 
+		} //End of if searchedIndex >= RESET_VALUE && getPasswordMatch(borrowedPassword) == false.
+	} //End of setSearchedIndex.
+	public void setWriteRecord(String borrowedUsername, String borrowedPassword) //Passes the parameters listed to created a data sheet of the items purchased.
+	{
+		try //This program will attempt to open the file and write data to it.
+		{	
+			PrintWriter filePrintWriter = new PrintWriter(new FileWriter(masterFileName, true)); //Creates an instance of the printWriter Class passing the fileWriter and passing the file's name to it as well as allowing us to append the file.
+			filePrintWriter.printf("%n%s\t%s\t", borrowedUsername ,borrowedPassword); //Prints the following parameters to the data sheet seperated by a tab.
+			filePrintWriter.close(); //Closes the filePrintWriter object.
+			recordCount++; //Increments the recordCount variable this will be used to correctly size the amount of records.
+		} //End of try. 
+		catch (IOException ex) //Catches the potential error that the file is not named and let's the developer change the result of the error.
+		{
+			recordCount = NOT_FOUND;
+		} //End of catch.
+	} //End of setWriteOrder method.
+	//Because values are not in order we use the sequential search with the values of Passwords and UserNames.
+	public int getSeqSearch(String borrowedBorrowedUserName) //Uses the UserName as given by the user to search against the arrays imported from the file.
+	{
+		//Local variables for use within the program, the sequential search does not work without an incrementer and a value to hold the value of the item.
+		int localIndex = 0; //Local accumulator variable. Even with other searches the localIndex will be redeclared as 0. This will cycly through all values to check for the correct value.
+		int localFound = NOT_FOUND; //Used to determine if a value has been found, it is declared to -1 for decision structure within the MainClass that will tell the user that the value has not occured (see currentInventory.getItemSearchIndex() < 0.
+		while (localIndex < recordCount) //While the localIndex has not exceeded the amount of records, the loop will continue to cycle through all values within array.
+		{
+			if (borrowedBorrowedUserName.equalsIgnoreCase(userNames[localIndex])) //If the username matches the user's entered username, the value is a match and will return the given value. 
+			{
+				localFound = localIndex; //Local found becomes the value of localIndex at the given found item.
+				localIndex = recordCount; //Makes localIndex end the loop (see localIndex < recordCount above), the process is unnecessary if the value is found.
+			} //End of if borrowedBorrowedTargetID == itemIDs[localIndex].
+			else //If the value is not found it will be incremented to look for the value in the next index of the array.
+			{
+				localIndex++; //Used to cycle between array position and also to control the loop (see localIndex < recordCount above).
+			} //End of else borrowedBorrowedTargetID == itemIDs[localIndex]
+		} //End of while local index < recordCount
+		return localFound; //If the result is not found the result will be the -1 resulting in the failure to correctly find the item or will return the item's correct location.
+	} //End of getSearchResults method
+	public boolean getPasswordMatch(String borrowedBorrowedPassword) //Uses the Password as given by the user to search against the arrays imported from the file.
+	{
+		return borrowedBorrowedPassword.equals(passwords[searchedIndex]); //Uses the searchedIndex (as set by the getSeqSearch). This will find the correct index of the password.
+	} //End of getSearchResults method
+	public String getFileName() //Returns the file name to the MainClass and supporting classes (if needed). This return statement is not needed.
+	{
+		return masterFileName; //Returns the masterFileName variable to the calling method. The variable contains the file's name.
+	} //End of getFileName method.
+	public int getRecordCount() //Returns the record count to the calling method as incremented by the setLoadArrays (if needed). This return statement is not needed.
+	{
+		return recordCount; //Returns the record count as incremented by the setLoadArrays method.
+	} //End of getRecordCount method.
+	public int getSearchedIndex() //Returns the getSearchedIndex to the MainClass, will be used in processes to determine if a username exists with that name (currentUser.getSearchedIndex > 0).
+	{
+		return searchedIndex; //Returns the searchedIndex to the MainClass, will be used to find if a username has already been used.
+	} //End of getSearchedIndex method.
+} //End of UserAccount Class.
